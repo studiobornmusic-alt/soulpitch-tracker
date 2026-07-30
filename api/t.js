@@ -65,11 +65,12 @@ export default async function handler(req, res) {
     await fetch(`${SUPABASE_URL}/rest/v1/link_clicks`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({
-        pitch_id: link.pitch_id,
-        link_url: link.source_url,
-        clicked_at: new Date().toISOString()
-      })
+  body: JSON.stringify({
+          pitch_id: link.pitch_id,
+          track_id: link.track_id,
+          link_url: link.source_url,
+          clicked_at: new Date().toISOString()
+        })
     });
   }
 
