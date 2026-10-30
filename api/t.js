@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   };
 
   const lookupRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/listen_links?slug=eq.${encodeURIComponent(slug)}&select=id,source_url,track_id,pitch_id`,
+    `${SUPABASE_URL}/rest/v1/listen_links?slug=eq.${encodeURIComponent(slug)}&select=id,source_url,track_id,pitch_id,user_id`,
     { headers }
   );
   const rows = await lookupRes.json();
@@ -29,6 +29,11 @@ export default async function handler(req, res) {
     return res.status(404).send('Link not found');
   }
   const link = rows[0];
+  const cookieHeader = req.headers['cookie'] || '';
+  const ownerMatch = cookieHeader.match(/(?:^|;\s*)sp_owner=([^;]+)/);
+  let ownerId = '';
+  try { ownerId = ownerMatch ? decodeURIComponent(ownerMatch[1]) : ''; } catch { ownerId = ''; }
+  const isOwnerClick = !!ownerId && ownerId === link.user_id;
   let targetUrl;
   try {
     targetUrl = new URL(link.source_url);
@@ -40,7 +45,7 @@ export default async function handler(req, res) {
   }
 
   let shouldLog = false;
-  if (link.pitch_id && !isLikelyBot) {
+  if (link.pitch_id && !isLikelyBot && !isOwnerClick) {
     let statusConfirmed = false;
     let pitchStatus = null;
     for (let attempt = 0; attempt < 2 && !statusConfirmed; attempt++) {
